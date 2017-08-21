@@ -2,3 +2,22 @@
     width: 60%;
     margin: 30px auto;
 }
+.todoItem{
+    margin: 10px 0;
+}
+.todoItem-con{
+    height: 30px;
+    line-height: 30px;
+    .add-time{
+        float: right;
+    }
+}
+.finishItem-con{
+    text-decoration: line-through;
+    height: 30px;
+    line-height: 30px;
+    color: #cecece;
+    .add-time{
+        float: right;
+    }
+}

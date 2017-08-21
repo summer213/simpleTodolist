@@ -9,6 +9,9 @@ var Todo = new Schema({
 	date: {
 		type: String
 		// required: true
+	},
+	isfinish:{
+		type: Number
 	}
 }, { collection: 'todolist' });
 

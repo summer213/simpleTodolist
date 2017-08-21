@@ -4,18 +4,19 @@
 import React from 'react';
 import $ from 'jquery'
 import TodoList from './todolist.js'
+import { Row, Col, Input, Button, Tabs } from 'antd';
+const TabPane = Tabs.TabPane;
 
 import { Router, Route, hashHistory } from 'react-router';
 
 require('../public/main.scss');
-
+require('../../node_modules/antd/dist/antd.css');
 class App extends React.Component {
     // var App = React.createClass({
     constructor(props) {
         super(props);
         this.state = {
-            todoList: [],
-            showTooltip: false  // 控制 tooltip 的显示隐藏
+            todoList: []
         }
     }
     // 提交表单操作
@@ -42,10 +43,10 @@ class App extends React.Component {
 
         // 生成参数
         const newItem = {
-            content: this.refs.content.value,
-            date: month + "/" + date + " " + hours + ":" + minutes + ":" + seconds
+            content: this.refs.content.refs.input.value,
+            date: month + "/" + date + " " + hours + ":" + minutes + ":" + seconds,
+            isfinish: 0
         };
-        // console.log(newItem);
         // // 添加 todo
         this._onNewItem(newItem)
         // // 重置表单
@@ -54,7 +55,7 @@ class App extends React.Component {
         // this.setState({
         //     showTooltip: false,
         // });
-        this.refs.content.value = "";
+        this.refs.content.refs.input.value = "";
     }
     // 添加 todo
     componentDidMount () {
@@ -64,7 +65,23 @@ class App extends React.Component {
     _getTodoList(){
         const that = this;
         $.ajax({
-			url: '/getAllItems',
+			url: '/getTodoItems',
+			type: 'get',
+			dataType: 'json',
+			success: data => {
+				that.setState({ 
+					todoList :data
+				});
+			},
+			error: err => {
+				console.log(err);
+			}
+		})
+    }
+    _getFinishList(){
+        const that = this;
+        $.ajax({
+			url: '/getFinishItems',
 			type: 'get',
 			dataType: 'json',
 			success: data => {
@@ -85,6 +102,7 @@ class App extends React.Component {
 			dataType: 'json',
 			data:newItem,
 			success: data => {
+                console.log(data);
 				const todoList = that.todoSort(data);
 				that.setState({ 
 					todoList 
@@ -100,13 +118,29 @@ class App extends React.Component {
 		todoList.reverse();
 		return todoList;
 	}
-    _onDeleteItem(id){
+    _onDeleteItem(deletItem){
         // event.preventDefault();
         // var id = this.props.id;
-        // console.log(id);
+        // console.log(deletItem);
         const that = this;
         $.ajax({
             url:'/delete',
+            type:'post',
+            dataType:'json',
+            data:deletItem,
+            success:data =>{
+                const todoList = that.todoSort(data);
+                that.setState({ 
+					todoList 
+				});
+            }
+
+        })
+    }
+    _onFinishItem(id){
+        const that = this;
+        $.ajax({
+            url:'/FinishItems',
             type:'post',
             dataType:'json',
             data:{
@@ -121,26 +155,55 @@ class App extends React.Component {
 
         })
     }
+    _onEditItem(editItem){
+        const that = this;
+        $.ajax({
+            url:'/EditItems',
+            type:'post',
+            dataType:'json',
+            data:editItem,
+            success:data =>{
+                console.log(data);
+                const todoList = that.todoSort(data);
+                that.setState({ 
+					todoList 
+				});
+            }
+
+        })
+    }
+    tabCallback(key) {
+        if(key==='2'){
+            this._getFinishList();
+        }else if(key==='1'){
+            this._getTodoList();
+        }
+    }
     render() {
         // console.log(props);
         return (
             <div>
-                <div className="panel panel-primary">
-                    <div className="panel-heading">A Simple TodoList</div>
-                    <div className="panel-body col-md-12">
-                        <div className="form-group">
-                            <div className="form-inline">
-                                <input type="text" ref="content" className="form-control col-md-6" placeholder="Write todolist" />
-                                <button className="btn btn-primary" onClick={this.handleSubmit.bind(this)} >Submit</button>
+                <div className="panel">
+                    <Tabs defaultActiveKey="1" onChange={this.tabCallback.bind(this)}>
+                        <TabPane tab="待办事件" key="1">
+                            <Row gutter={16}>
+                                <Col span={12}>
+                                    <Input type="text" ref="content" placeholder="Write todolist" />
+                                </Col>
+                                <Col span={12} className="gutter-row">
+                                    <Button  className="gutter-box" type="primary" onClick={this.handleSubmit.bind(this)} >Submit</Button>
+                                </Col>
+                            </Row>
+                            <div className="todolist">
+                                <TodoList todoList={this.state.todoList}  onDeleteItem={this._onDeleteItem.bind(this)} onFinishItem={this._onFinishItem.bind(this)} onEditItem={this._onEditItem.bind(this)}/>
                             </div>
-                        </div>
-                        <div className="form-group">
-                            <TodoList todoList={this.state.todoList}  onDeleteItem={this._onDeleteItem.bind(this)} />
-                        </div>
-                    </div>
+                        </TabPane>
+                        <TabPane tab="已完成" key="2">
+                                <TodoList todoList={this.state.todoList}  onDeleteItem={this._onDeleteItem.bind(this)} onFinishItem={this._onFinishItem.bind(this)} onEditItem={this._onEditItem.bind(this)}/>
+                        </TabPane>   
+                    </Tabs>
+                {/*<TodoList todoLis`t={this.state.todoList} onDeleteItem={this._onDeleteItem.bind(this)} />*/}
                 </div>
-
-                {/*<TodoList todoList={this.state.todoList} onDeleteItem={this._onDeleteItem.bind(this)} />*/}
             </div>
         );
     }

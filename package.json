@@ -13,6 +13,7 @@
   "author": "summer",
   "license": "ISC",
   "dependencies": {
+    "antd": "^2.12.6",
     "bootstrap": "^4.0.0-alpha.2",
     "express": "^4.14.0",
     "redux": "^3.6.0",
